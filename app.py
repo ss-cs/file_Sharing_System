@@ -167,19 +167,25 @@ def add_user():
 
     if _name and _email and _password and request.method == 'POST':
         
-        _hashed_password = generate_password_hash(_password)
-        users = mongo.db.users.find_one({'email':_email})
+        checkEmail = _email.count('@')
+        if(checkEmail == 1):
+            _hashed_password = generate_password_hash(_password)
+            users = mongo.db.users.find_one({'email':_email})
 
-        if(users and (check_password_hash(users["pwd"], _password))):
-        
-            resp = jsonify({'message':"User Already Present"})
-            resp.status_code = 200
-            return resp
+            if(users and (check_password_hash(users["pwd"], _password))):
             
+                resp = jsonify({'message':"User Already Present"})
+                resp.status_code = 200
+                return resp
+                
+            else:
+                id = mongo.db.users.insert_one({'name':_name , 'email' : _email ,'pwd' : _hashed_password})
+                encrypturl = "http://localhost:5000/signup:"+generate_password_hash(_email)
+                resp = jsonify({'message':'User added successfully', 'URL': encrypturl })
+                resp.status_code = 200
+                return resp
         else:
-            id = mongo.db.users.insert_one({'name':_name , 'email' : _email ,'pwd' : _hashed_password})
-            encrypturl = "http://localhost:5000/signup:"+generate_password_hash(_email)
-            resp = jsonify({'message':'User added successfully', 'URL': encrypturl })
+            resp = jsonify({'message':"Invalid Email"})
             resp.status_code = 200
             return resp
 
